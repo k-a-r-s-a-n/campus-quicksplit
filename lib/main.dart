@@ -13,29 +13,24 @@ import 'package:uuid/uuid.dart';
 // 1. PALETTE & DESIGN TOKENS
 // ============================================================================
 class AppColors {
-  // Dark Theme
   static const Color darkBg = Color(0xFF0A0E21);
   static const Color darkCard = Color(0xFF1E2235);
-  static const Color darkCardHover = Color(0xFF252A40);
   static const Color darkBorder = Color(0xFF2A2F4A);
   static const Color darkSurface = Color(0xFF12162A);
 
-  // Light Theme
   static const Color lightBg = Color(0xFFF8F9FF);
   static const Color lightCard = Color(0xFFFFFFFF);
   static const Color lightBorder = Color(0xFFE2E8F0);
   static const Color lightSurface = Color(0xFFEEF2F6);
   static const Color lightText = Color(0xFF1A1E30);
 
-  // Brand Accents
-  static const Color primary = Color(0xFF6C63FF); // Electric Indigo
+  static const Color primary = Color(0xFF6C63FF);
   static const Color primaryDark = Color(0xFF4B44CC);
-  static const Color secondary = Color(0xFFFF6584); // Coral Pink
-  static const Color success = Color(0xFF00C896); // Mint Emerald
-  static const Color warning = Color(0xFFFFB84C); // Golden Amber
+  static const Color secondary = Color(0xFFFF6584);
+  static const Color success = Color(0xFF00C896);
+  static const Color warning = Color(0xFFFFB84C);
   static const Color textMuted = Color(0xFF9CA3AF);
 
-  // Category Colors
   static const Map<String, Color> categoryColors = {
     'Canteen': Color(0xFFFF6584),
     'Chai & Snacks': Color(0xFFFFB84C),
@@ -60,7 +55,7 @@ class AppColors {
 }
 
 // ============================================================================
-// 2. DATA MODELS & ENUMS
+// 2. DATA MODELS
 // ============================================================================
 enum SplitMode { equal, exact, percentage }
 
@@ -98,9 +93,9 @@ class Expense {
   final double amount;
   final String category;
   final DateTime date;
-  final Map<String, double> paidBy; // memberId -> amount paid
+  final Map<String, double> paidBy;
   final SplitMode splitMode;
-  final Map<String, double> splits; // memberId -> amount owed
+  final Map<String, double> splits;
   final String note;
 
   Expense({
@@ -173,8 +168,6 @@ class DebtOptimizer {
   }) {
     if (members.isEmpty || expenses.isEmpty) return [];
 
-    // Step 1: Calculate net balance for each member
-    // Net balance = Total paid by member - Total owed by member
     final Map<String, double> balances = {for (var m in members) m.id: 0.0};
 
     for (final exp in expenses) {
@@ -187,21 +180,16 @@ class DebtOptimizer {
       });
     }
 
-    // Step 2: Separate into debtors and creditors
     final List<MapEntry<String, double>> debtors = [];
     final List<MapEntry<String, double>> creditors = [];
 
     balances.forEach((memberId, net) {
-      if (net < -0.01) {
-        debtors.add(MapEntry(memberId, net));
-      } else if (net > 0.01) {
-        creditors.add(MapEntry(memberId, net));
-      }
+      if (net < -0.01) debtors.add(MapEntry(memberId, net));
+      if (net > 0.01) creditors.add(MapEntry(memberId, net));
     });
 
-    // Sort by absolute balance descending (Greedy strategy)
-    debtors.sort((a, b) => a.value.compareTo(b.value)); // most negative first
-    creditors.sort((a, b) => b.value.compareTo(a.value)); // most positive first
+    debtors.sort((a, b) => a.value.compareTo(b.value));
+    creditors.sort((a, b) => b.value.compareTo(a.value));
 
     final List<SimplifiedDebt> result = [];
     int dIdx = 0;
@@ -220,7 +208,7 @@ class DebtOptimizer {
       final roundedTransfer = (transferAmount * 100).round() / 100.0;
 
       if (roundedTransfer > 0.01) {
-        final key = '${debtorId}_to_$creditorId';
+        final key = '${debtorId}_to_${creditorId}';
         result.add(
           SimplifiedDebt(
             fromMemberId: debtorId,
@@ -279,7 +267,6 @@ class AppProvider extends ChangeNotifier {
           .map((e) => Member.fromMap(Map<String, dynamic>.from(e)))
           .toList();
     } else {
-      // Seed default college group members
       _members = [
         Member(id: '1', name: 'Aarav (You)', avatarColor: '#6C63FF', upiId: 'aarav@okaxis'),
         Member(id: '2', name: 'Rohan', avatarColor: '#00C896', upiId: 'rohan@oksbi'),
@@ -295,7 +282,6 @@ class AppProvider extends ChangeNotifier {
           .map((e) => Expense.fromMap(Map<String, dynamic>.from(e)))
           .toList();
     } else {
-      // Seed default campus sample expenses
       final now = DateTime.now();
       _expenses = [
         Expense(
@@ -405,11 +391,10 @@ class AppProvider extends ChangeNotifier {
   }
 
   void markDebtSettled(String fromId, String toId, double amount) {
-    final key = '${fromId}_to_$toId';
+    final key = '${fromId}_to_${toId}';
     _settledDebts.add(key);
     _saveSettled();
 
-    // Also record settlement as an balancing payment expense
     final fromName = getMemberName(fromId);
     final toName = getMemberName(toId);
     final settlementExpense = Expense(
@@ -445,19 +430,9 @@ class AppProvider extends ChangeNotifier {
     return member.name;
   }
 
-  Member? getMember(String id) {
-    try {
-      return _members.firstWhere((m) => m.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // Dashboard Aggregates
   double get totalGroupSpend =>
       _expenses.fold(0.0, (sum, item) => sum + item.amount);
 
-  // '1' is designated as the primary user (You)
   double get myTotalPaid => _expenses.fold(0.0, (sum, item) {
         return sum + (item.paidBy['1'] ?? 0.0);
       });
@@ -487,7 +462,7 @@ class AppProvider extends ChangeNotifier {
 }
 
 // ============================================================================
-// 5. HELPER FORMATTERS & UTILITIES
+// 5. HELPER FORMATTERS
 // ============================================================================
 class Formatters {
   static final NumberFormat currencyFormatter = NumberFormat.currency(
@@ -526,7 +501,6 @@ class Formatters {
 // 6. CUSTOM INTERACTIVE WIDGETS
 // ============================================================================
 
-/// 3D Matrix4 Tilt Card with responsive cursor/touch tracking
 class Matrix4TiltCard extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -554,8 +528,6 @@ class _Matrix4TiltCardState extends State<Matrix4TiltCard>
   double _x = 0;
   double _y = 0;
   late AnimationController _animController;
-  late Animation<double> _animX;
-  late Animation<double> _animY;
 
   @override
   void initState() {
@@ -573,23 +545,19 @@ class _Matrix4TiltCardState extends State<Matrix4TiltCard>
     final deltaY = (event.localPosition.dy - centerY) / centerY;
 
     setState(() {
-      _x = deltaY * -0.06; // Pitch
-      _y = deltaX * 0.06; // Roll
+      _x = deltaY * -0.06;
+      _y = deltaX * 0.06;
     });
   }
 
   void _onPointerExit(PointerEvent event) {
-    _animX = Tween<double>(begin: _x, end: 0.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
-    _animY = Tween<double>(begin: _y, end: 0.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
     _animController.forward(from: 0).then((_) {
-      setState(() {
-        _x = 0;
-        _y = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _x = 0;
+          _y = 0;
+        });
+      }
     });
   }
 
@@ -613,7 +581,7 @@ class _Matrix4TiltCardState extends State<Matrix4TiltCard>
               onTap: widget.onTap,
               child: Transform(
                 transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001) // perspective
+                  ..setEntry(3, 2, 0.001)
                   ..rotateX(_x)
                   ..rotateY(_y),
                 alignment: FractionalOffset.center,
@@ -625,7 +593,7 @@ class _Matrix4TiltCardState extends State<Matrix4TiltCard>
                     border: widget.border,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.25),
+                        color: AppColors.primary.withOpacity(0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -642,7 +610,6 @@ class _Matrix4TiltCardState extends State<Matrix4TiltCard>
   }
 }
 
-/// Symmetrical Notched Bottom Nav Bar
 class SymmetricalNotchedBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -667,7 +634,7 @@ class SymmetricalNotchedBottomNav extends StatelessWidget {
         border: Border(top: BorderSide(color: borderColor, width: 1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -681,7 +648,7 @@ class SymmetricalNotchedBottomNav extends StatelessWidget {
             children: [
               _buildNavItem(context, 0, Icons.dashboard_rounded, 'Overview'),
               _buildNavItem(context, 1, Icons.receipt_long_rounded, 'Activity'),
-              const SizedBox(width: 48), // Space for centered FAB notch
+              const SizedBox(width: 48),
               _buildNavItem(context, 2, Icons.pie_chart_rounded, 'Analytics'),
               _buildNavItem(context, 3, Icons.settings_rounded, 'Settings'),
             ],
@@ -693,7 +660,7 @@ class SymmetricalNotchedBottomNav extends StatelessWidget {
 
   Widget _buildNavItem(BuildContext context, int index, IconData icon, String label) {
     final isSelected = currentIndex == index;
-    const activeColor = AppColors.primary;
+    final activeColor = AppColors.primary;
     final inactiveColor = Theme.of(context).brightness == Brightness.dark
         ? AppColors.textMuted
         : const Color(0xFF64748B);
@@ -731,9 +698,6 @@ class SymmetricalNotchedBottomNav extends StatelessWidget {
 // 7. SCREENS
 // ============================================================================
 
-// ----------------------------------------------------------------------------
-// A. SPLASH SCREEN (Typewriter + Circular Reveal)
-// ----------------------------------------------------------------------------
 class SplashScreen extends StatefulWidget {
   final VoidCallback onFinish;
 
@@ -743,8 +707,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> {
   String _typedTitle = '';
   final String _fullTitle = 'Campus QuickSplit';
   int _charIndex = 0;
@@ -794,7 +757,7 @@ class _SplashScreenState extends State<SplashScreen>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
+                    color: AppColors.primary.withOpacity(0.4),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
@@ -835,9 +798,6 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-// ----------------------------------------------------------------------------
-// B. MAIN APP NAVIGATION SHELL
-// ----------------------------------------------------------------------------
 class MainShellScreen extends StatelessWidget {
   const MainShellScreen({super.key});
 
@@ -845,7 +805,7 @@ class MainShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    const screens = [
+    final screens = const [
       DashboardScreen(),
       ActivityScreen(),
       AnalyticsScreen(),
@@ -876,7 +836,7 @@ class MainShellScreen extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.45),
+              color: AppColors.primary.withOpacity(0.45),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -904,9 +864,6 @@ class MainShellScreen extends StatelessWidget {
   }
 }
 
-// ----------------------------------------------------------------------------
-// C. DASHBOARD SCREEN
-// ----------------------------------------------------------------------------
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -924,7 +881,7 @@ class DashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
+                color: AppColors.primary.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text('⚡', style: TextStyle(fontSize: 18)),
@@ -970,7 +927,6 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. 3D Net Balance Card
             Matrix4TiltCard(
               gradient: const LinearGradient(
                 colors: [AppColors.primary, AppColors.primaryDark],
@@ -991,14 +947,14 @@ class DashboardScreen extends StatelessWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.8,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: Colors.white.withOpacity(0.8),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
+                            color: Colors.white.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -1039,7 +995,7 @@ class DashboardScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.18),
+                        color: Colors.black.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -1053,7 +1009,7 @@ class DashboardScreen extends StatelessWidget {
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: Colors.white.withOpacity(0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -1072,7 +1028,7 @@ class DashboardScreen extends StatelessWidget {
                           Container(
                             height: 28,
                             width: 1,
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: Colors.white.withOpacity(0.15),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -1084,7 +1040,7 @@ class DashboardScreen extends StatelessWidget {
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: Colors.white.withOpacity(0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -1110,7 +1066,6 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 26),
 
-            // 2. Squad Members Horizontal List
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1153,7 +1108,6 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // 3. Settle Up Direct Cards Section
             Text(
               'Settle Up',
               style: GoogleFonts.plusJakartaSans(
@@ -1190,7 +1144,6 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 26),
 
-            // 4. Recent Expenses
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1279,9 +1232,9 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: const Text(
+                  child: Text(
                     '➔',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -1353,7 +1306,7 @@ class DashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.12),
+              color: AppColors.success.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
             child: const Text('🎉', style: TextStyle(fontSize: 28)),
@@ -1440,8 +1393,7 @@ class DashboardScreen extends StatelessWidget {
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.4),
-            style: BorderStyle.solid,
+            color: AppColors.primary.withOpacity(0.4),
           ),
         ),
         child: Column(
@@ -1450,7 +1402,7 @@ class DashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
+                color: AppColors.primary.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.person_add_alt_1_rounded,
@@ -1525,9 +1477,6 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-// ----------------------------------------------------------------------------
-// D. ACTIVITY SCREEN (Search, Filter, Swipe-to-Delete with Undo)
-// ----------------------------------------------------------------------------
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
 
@@ -1568,7 +1517,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ),
       body: Column(
         children: [
-          // Search & Filter Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: TextField(
@@ -1586,8 +1534,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ),
             ),
           ),
-
-          // Category Filter Chips
           SizedBox(
             height: 44,
             child: ListView.separated(
@@ -1628,10 +1574,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               },
             ),
           ),
-
           const SizedBox(height: 10),
-
-          // Expense List with Dismissible Swipe-to-Delete
           Expanded(
             child: filteredExpenses.isEmpty
                 ? Center(
@@ -1713,9 +1656,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 }
 
-// ----------------------------------------------------------------------------
-// E. ANALYTICS SCREEN (Charts with fl_chart)
-// ----------------------------------------------------------------------------
 class AnalyticsScreen extends StatelessWidget {
   const AnalyticsScreen({super.key});
 
@@ -1768,7 +1708,6 @@ class AnalyticsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Overall Stats Row
             Row(
               children: [
                 Expanded(
@@ -1841,7 +1780,6 @@ class AnalyticsScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Category Breakdown Chart
             Text(
               'Category Breakdown',
               style: GoogleFonts.plusJakartaSans(
@@ -1935,9 +1873,6 @@ class AnalyticsScreen extends StatelessWidget {
   }
 }
 
-// ----------------------------------------------------------------------------
-// F. SETTINGS SCREEN (Preferences & Group Management)
-// ----------------------------------------------------------------------------
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -1983,40 +1918,46 @@ class SettingsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  SwitchMaterial(color: Colors.transparent, child: ListTile(
-                    title: Text(
-                      'Dark Mode Theme',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
+                  Material(
+                    color: Colors.transparent,
+                    child: SwitchListTile(
+                      title: Text(
+                        'Dark Mode Theme',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
                       ),
+                      subtitle: Text(
+                        'High contrast OLED dark interface',
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppColors.textMuted),
+                      ),
+                      value: isDark,
+                      activeColor: AppColors.primary,
+                      onChanged: (_) => provider.toggleTheme(),
                     ),
-                    subtitle: Text(
-                      'High contrast OLED dark interface',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.textMuted),
-                    ),
-                    value: isDark,
-                    activeThumbColor: AppColors.primary,
-                    onChanged: (_) => provider.toggleTheme(),
                   ),
                   Divider(height: 1, color: borderColor),
-                  Material(color: Colors.transparent, child: ListTile(
-                    title: Text(
-                      'Currency Display',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
+                  Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      title: Text(
+                        'Currency Display',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
                       ),
+                      subtitle: Text(
+                        'Indian Rupee (INR - ₹)',
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppColors.textMuted),
+                      ),
+                      trailing: const Text('🇮🇳 ₹', style: TextStyle(fontSize: 18)),
                     ),
-                    subtitle: Text(
-                      'Indian Rupee (INR - ₹)',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.textMuted),
-                    ),
-                    trailing: const Text('🇮🇳 ₹', style: TextStyle(fontSize: 18)),
                   ),
                 ],
               ),
@@ -2047,27 +1988,30 @@ class SettingsScreen extends StatelessWidget {
                 separatorBuilder: (_, __) => Divider(height: 1, color: borderColor),
                 itemBuilder: (ctx, i) {
                   final m = provider.members[i];
-                  return Material(color: Colors.transparent, child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Formatters.parseHexColor(m.avatarColor),
-                      child: Text(
-                        m.name.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                  return Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Formatters.parseHexColor(m.avatarColor),
+                        child: Text(
+                          m.name.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    ),
-                    title: Text(
-                      m.name,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
+                      title: Text(
+                        m.name,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: textColor,
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      m.upiId.isNotEmpty ? m.upiId : 'No UPI added',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.textMuted),
+                      subtitle: Text(
+                        m.upiId.isNotEmpty ? m.upiId : 'No UPI added',
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppColors.textMuted),
+                      ),
                     ),
                   );
                 },
@@ -2090,49 +2034,52 @@ class SettingsScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
               ),
-              child: Material(color: Colors.transparent, child: ListTile(
-                leading: const Icon(Icons.delete_forever_rounded,
-                    color: Colors.redAccent),
-                title: Text(
-                  'Reset All Expenses',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.redAccent,
-                  ),
-                ),
-                subtitle: Text(
-                  'Clears history and balance calculations',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: AppColors.textMuted),
-                ),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Reset Everything?'),
-                      content: const Text(
-                          'This will clear all expense records and reset all balances back to zero.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent),
-                          onPressed: () {
-                            provider.resetAllData();
-                            Navigator.pop(ctx);
-                          },
-                          child: const Text('Reset All Data'),
-                        ),
-                      ],
+              child: Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: const Icon(Icons.delete_forever_rounded,
+                      color: Colors.redAccent),
+                  title: Text(
+                    'Reset All Expenses',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.redAccent,
                     ),
-                  );
-                },
+                  ),
+                  subtitle: Text(
+                    'Clears history and balance calculations',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: AppColors.textMuted),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Reset Everything?'),
+                        content: const Text(
+                            'This will clear all expense records and reset all balances back to zero.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent),
+                            onPressed: () {
+                              provider.resetAllData();
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text('Reset All Data'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 40),
@@ -2144,7 +2091,7 @@ class SettingsScreen extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// G. ADD EXPENSE BOTTOM SHEET MODAL
+// G. ENHANCED ADD EXPENSE BOTTOM SHEET MODAL (With Multi-Payer + Exact/Ratio Inputs)
 // ----------------------------------------------------------------------------
 class AddExpenseBottomSheet extends StatefulWidget {
   const AddExpenseBottomSheet({super.key});
@@ -2159,10 +2106,13 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   final _noteCtrl = TextEditingController();
 
   String _selectedCategory = 'Canteen';
-  String _paidById = '1'; // Default to User
+  bool _isMultiPayer = false;
+  String _singlePayerId = '1';
+
   SplitMode _splitMode = SplitMode.equal;
   final Set<String> _selectedSplitters = {};
 
+  final Map<String, TextEditingController> _paidCtrls = {};
   final Map<String, TextEditingController> _exactCtrls = {};
   final Map<String, TextEditingController> _percentCtrls = {};
 
@@ -2172,7 +2122,8 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     final members = context.read<AppProvider>().members;
     for (final m in members) {
       _selectedSplitters.add(m.id);
-      _exactCtrls[m.id] = TextEditingController();
+      _paidCtrls[m.id] = TextEditingController(text: '0');
+      _exactCtrls[m.id] = TextEditingController(text: '0');
       _percentCtrls[m.id] = TextEditingController(
           text: (100.0 / members.length).toStringAsFixed(1));
     }
@@ -2183,6 +2134,9 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
     _noteCtrl.dispose();
+    for (final c in _paidCtrls.values) {
+      c.dispose();
+    }
     for (final c in _exactCtrls.values) {
       c.dispose();
     }
@@ -2221,7 +2175,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.3),
+                  color: AppColors.textMuted.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -2237,7 +2191,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Amount Input
             TextField(
               controller: _amountCtrl,
               keyboardType:
@@ -2255,7 +2208,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 14),
 
-            // Title Input
             TextField(
               controller: _titleCtrl,
               decoration: const InputDecoration(
@@ -2265,7 +2217,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Category Selector
             Text(
               'CATEGORY',
               style: GoogleFonts.inter(
@@ -2303,40 +2254,84 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Paid By Selector
+            // Multi-Payer Toggle Section
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'PAID BY: ',
+                  'PAID BY',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
                   ),
                 ),
-                const SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: _paidById,
-                  underline: const SizedBox(),
-                  items: provider.members.map((m) {
-                    return DropdownMenuItem(
-                      value: m.id,
-                      child: Text(
-                        m.name,
-                        style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (v) {
-                    if (v != null) setState(() => _paidById = v);
-                  },
+                Row(
+                  children: [
+                    Text(
+                      'Multiple Payers',
+                      style: GoogleFonts.inter(
+                          fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    Switch(
+                      value: _isMultiPayer,
+                      activeColor: AppColors.primary,
+                      onChanged: (val) => setState(() => _isMultiPayer = val),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            if (!_isMultiPayer)
+              DropdownButton<String>(
+                value: _singlePayerId,
+                isExpanded: true,
+                items: provider.members.map((m) {
+                  return DropdownMenuItem(
+                    value: m.id,
+                    child: Text(
+                      m.name,
+                      style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _singlePayerId = v);
+                },
+              )
+            else
+              Column(
+                children: provider.members.map((m) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: Text(m.name,
+                                style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w600))),
+                        SizedBox(
+                          width: 100,
+                          height: 40,
+                          child: TextField(
+                            controller: _paidCtrls[m.id],
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              prefixText: '₹ ',
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            const SizedBox(height: 16),
 
-            // Split Mode Segmented Switch
+            // Split Mode Segmented Button
             SegmentedButton<SplitMode>(
               segments: const [
                 ButtonSegment(
@@ -2358,7 +2353,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Splitters Selection List
             Text(
               'SPLIT AMONG',
               style: GoogleFonts.inter(
@@ -2368,34 +2362,72 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
               ),
             ),
             const SizedBox(height: 8),
+
+            // Split Members List with Inline Fields for Exact/Percentage
             Column(
               children: provider.members.map((m) {
                 final isSelected = _selectedSplitters.contains(m.id);
-                return CheckboxMaterial(color: Colors.transparent, child: ListTile(
-                  title: Text(
-                    m.name,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: isSelected,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _selectedSplitters.add(m.id);
+                            } else if (_selectedSplitters.length > 1) {
+                              _selectedSplitters.remove(m.id);
+                            }
+                          });
+                        },
+                      ),
+                      Expanded(
+                        child: Text(
+                          m.name,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (isSelected && _splitMode == SplitMode.exact)
+                        SizedBox(
+                          width: 90,
+                          height: 38,
+                          child: TextField(
+                            controller: _exactCtrls[m.id],
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              prefixText: '₹ ',
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
+                            ),
+                          ),
+                        ),
+                      if (isSelected && _splitMode == SplitMode.percentage)
+                        SizedBox(
+                          width: 80,
+                          height: 38,
+                          child: TextField(
+                            controller: _percentCtrls[m.id],
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              suffixText: '%',
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  value: isSelected,
-                  activeColor: AppColors.primary,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val == true) {
-                        _selectedSplitters.add(m.id);
-                      } else if (_selectedSplitters.length > 1) {
-                        _selectedSplitters.remove(m.id);
-                      }
-                    });
-                  },
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Submit Button
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -2428,7 +2460,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     if (title.isEmpty || totalAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please enter a valid title and amount greater than 0')),
+            content: Text('Please enter a valid title and amount greater than ₹0')),
       );
       return;
     }
@@ -2440,6 +2472,30 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
       return;
     }
 
+    // Process Payers Map
+    final Map<String, double> finalPaidBy = {};
+    if (!_isMultiPayer) {
+      finalPaidBy[_singlePayerId] = totalAmount;
+    } else {
+      double sumPaid = 0.0;
+      _paidCtrls.forEach((id, ctrl) {
+        final val = double.tryParse(ctrl.text.trim()) ?? 0.0;
+        if (val > 0) {
+          finalPaidBy[id] = val;
+          sumPaid += val;
+        }
+      });
+      if ((sumPaid - totalAmount).abs() > 0.01) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Multi-payer total (₹$sumPaid) must equal total expense (₹$totalAmount)')),
+        );
+        return;
+      }
+    }
+
+    // Process Splits Map
     final Map<String, double> finalSplits = {};
 
     if (_splitMode == SplitMode.equal) {
@@ -2449,14 +2505,34 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
         finalSplits[id] = roundedPerPerson;
       }
     } else if (_splitMode == SplitMode.exact) {
+      double sumExact = 0.0;
       for (final id in _selectedSplitters) {
         final val = double.tryParse(_exactCtrls[id]?.text ?? '0') ?? 0.0;
         finalSplits[id] = val;
+        sumExact += val;
+      }
+      if ((sumExact - totalAmount).abs() > 0.01) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Sum of exact splits (₹$sumExact) must equal total amount (₹$totalAmount)')),
+        );
+        return;
       }
     } else {
+      double sumPct = 0.0;
       for (final id in _selectedSplitters) {
         final pct = double.tryParse(_percentCtrls[id]?.text ?? '0') ?? 0.0;
+        sumPct += pct;
         finalSplits[id] = (totalAmount * pct) / 100.0;
+      }
+      if ((sumPct - 100.0).abs() > 0.5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Total percentage sum ($sumPct%) must equal 100%')),
+        );
+        return;
       }
     }
 
@@ -2466,7 +2542,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
       amount: totalAmount,
       category: _selectedCategory,
       date: DateTime.now(),
-      paidBy: {_paidById: totalAmount},
+      paidBy: finalPaidBy,
       splitMode: _splitMode,
       splits: finalSplits,
       note: _noteCtrl.text.trim(),
@@ -2477,9 +2553,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   }
 }
 
-// ----------------------------------------------------------------------------
-// H. SHARED COMPONENT: EXPENSE TILE
-// ----------------------------------------------------------------------------
 class ExpenseTile extends StatelessWidget {
   final Expense expense;
 
@@ -2514,7 +2587,7 @@ class ExpenseTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
@@ -2562,7 +2635,7 @@ class ExpenseTile extends StatelessWidget {
 }
 
 // ============================================================================
-// 8. APP ROOT & THEME SETUP
+// 8. MAIN ROOT WIDGET
 // ============================================================================
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2680,7 +2753,7 @@ class _SplashOrMainWrapperState extends State<SplashOrMainWrapper> {
     if (_showSplash) {
       return SplashScreen(
         onFinish: () {
-          setState(() => _showSplash = false);
+          if (mounted) setState(() => _showSplash = false);
         },
       );
     }
