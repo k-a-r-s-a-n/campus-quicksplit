@@ -55,17 +55,16 @@ class AppColors {
     'Other': Color(0xFF818CF8),
   };
 
-  // Uses IconData to strictly eliminate FaIconData type issues
   static const Map<String, dynamic> categoryFaIcons = {
-  'Canteen': FontAwesomeIcons.utensils,
-  'Chai & Snacks': FontAwesomeIcons.mugSaucer,
-  'Auto': FontAwesomeIcons.car,
-  'Xerox': FontAwesomeIcons.print,
-  'Mess': FontAwesomeIcons.bowlRice,
-  'Subscriptions': FontAwesomeIcons.film,
-  'Groceries': FontAwesomeIcons.basketShopping,
-  'Other': FontAwesomeIcons.tags,
-};
+    'Canteen': FontAwesomeIcons.utensils,
+    'Chai & Snacks': FontAwesomeIcons.mugSaucer,
+    'Auto': FontAwesomeIcons.car,
+    'Xerox': FontAwesomeIcons.print,
+    'Mess': FontAwesomeIcons.bowlRice,
+    'Subscriptions': FontAwesomeIcons.film,
+    'Groceries': FontAwesomeIcons.basketShopping,
+    'Other': FontAwesomeIcons.tags,
+  };
 }
 
 // ============================================================================
@@ -365,7 +364,7 @@ class DebtOptimizer {
     return result;
   }
 
-     static int calculateRawUnoptimizedCount(
+  static int calculateRawUnoptimizedCount(
     List<dynamic> membersOrExpenses, [
     List<Expense>? expenses,
   ]) {
@@ -400,7 +399,7 @@ class DebtOptimizer {
 // 6. APP PROVIDER
 // ============================================================================
 class AppProvider extends ChangeNotifier {
-  Box? _box; // <-- Changed from late Box _box;
+  Box? _box;
 
   List<Member> _members = [];
   List<Expense> _expenses = [];
@@ -413,7 +412,6 @@ class AppProvider extends ChangeNotifier {
 
   List<Member> get members => _members;
   List<Expense> get expenses => _expenses;
-  // Filters out settlements AND future-dated expenses for analytics:
   List<Expense> get filteredAnalyticsExpenses => _expenses
       .where((e) => !e.isSettlement && !e.date.isAfter(DateTime.now()))
       .toList();
@@ -453,14 +451,13 @@ class AppProvider extends ChangeNotifier {
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
-    Future<void> init() async {
+  Future<void> init() async {
     final box = await Hive.openBox('campus_quicksplit_db');
     _box = box;
 
     final isDark = box.get('isDarkTheme', defaultValue: true);
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
 
-    // Load or seed members
     final savedMembers = box.get('members');
     if (savedMembers != null) {
       _members = (jsonDecode(savedMembers) as List)
@@ -476,7 +473,6 @@ class AppProvider extends ChangeNotifier {
       _saveMembers();
     }
 
-    // Load or seed expenses
     final savedExpenses = box.get('expenses');
     if (savedExpenses != null) {
       _expenses = (jsonDecode(savedExpenses) as List)
@@ -491,9 +487,9 @@ class AppProvider extends ChangeNotifier {
           amount: 480.0,
           category: 'Canteen',
           date: now.subtract(const Duration(hours: 3)),
-          paidBy: {'1': 480.0},
+          paidBy: const {'1': 480.0},
           splitMode: SplitMode.equal,
-          splits: SplitEngine.calculateEqualSplits(totalAmount: 480.0, memberIds: ['1', '2', '3', '4']),
+          splits: SplitEngine.calculateEqualSplits(totalAmount: 480.0, memberIds: const ['1', '2', '3', '4']),
           note: 'Post mid-sem treat',
         ),
         Expense(
@@ -502,9 +498,9 @@ class AppProvider extends ChangeNotifier {
           amount: 120.0,
           category: 'Auto',
           date: now.subtract(const Duration(hours: 24)),
-          paidBy: {'2': 120.0},
+          paidBy: const {'2': 120.0},
           splitMode: SplitMode.equal,
-          splits: SplitEngine.calculateEqualSplits(totalAmount: 120.0, memberIds: ['1', '2', '4']),
+          splits: SplitEngine.calculateEqualSplits(totalAmount: 120.0, memberIds: const ['1', '2', '4']),
           note: 'Evening commute',
         ),
         Expense(
@@ -513,15 +509,14 @@ class AppProvider extends ChangeNotifier {
           amount: 250.0,
           category: 'Xerox',
           date: now.subtract(const Duration(hours: 48)),
-          paidBy: {'3': 250.0},
+          paidBy: const {'3': 250.0},
           splitMode: SplitMode.equal,
-          splits: SplitEngine.calculateEqualSplits(totalAmount: 250.0, memberIds: ['1', '2', '3', '4']),
+          splits: SplitEngine.calculateEqualSplits(totalAmount: 250.0, memberIds: const ['1', '2', '3', '4']),
         ),
       ];
       _saveExpenses();
     }
 
-    // Load groups
     final savedGroups = box.get('groups');
     if (savedGroups != null) {
       _groups = (jsonDecode(savedGroups) as List)
@@ -537,7 +532,7 @@ class AppProvider extends ChangeNotifier {
           colorValue: 0xFF2C6BED,
           status: 'owed',
           amount: 15565.73,
-          details: ['Aman pays you ₹11,830.77', 'Rohit pays you ₹3,734.96'],
+          details: const ['Aman pays you ₹11,830.77', 'Rohit pays you ₹3,734.96'],
         ),
         GroupItem(
           id: 'grp-2',
@@ -547,7 +542,7 @@ class AppProvider extends ChangeNotifier {
           colorValue: 0xFF14B8A6,
           status: 'settled',
           amount: 0,
-          details: ['All trip expenditures balanced'],
+          details: const ['All trip expenditures balanced'],
         ),
         GroupItem(
           id: 'grp-3',
@@ -557,13 +552,12 @@ class AppProvider extends ChangeNotifier {
           colorValue: 0xFFFF8C42,
           status: 'owe',
           amount: 1077.99,
-          details: ['Wi-Fi bill & Cook contribution pending'],
+          details: const ['Wi-Fi bill & Cook contribution pending'],
         ),
       ];
       _saveGroups();
     }
 
-    // Load settlements
     final savedSettlements = box.get('settlements');
     if (savedSettlements != null) {
       _settlements = (jsonDecode(savedSettlements) as List)
@@ -579,7 +573,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-    void toggleTheme() {
+  void toggleTheme() {
     _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     _box?.put('isDarkTheme', _themeMode == ThemeMode.dark);
     notifyListeners();
@@ -643,7 +637,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void addGroup(String name, String category) {
-    final colors = [0xFF2C6BED, 0xFF14B8A6, 0xFFFF8C42, 0xFFEC4899, 0xFF8B5CF6];
+    const colors = [0xFF2C6BED, 0xFF14B8A6, 0xFFFF8C42, 0xFFEC4899, 0xFF8B5CF6];
     final newGroup = GroupItem(
       id: 'grp-${const Uuid().v4()}',
       name: name,
@@ -652,7 +646,7 @@ class AppProvider extends ChangeNotifier {
       colorValue: colors[_groups.length % colors.length],
       status: 'settled',
       amount: 0,
-      details: ['Newly created group'],
+      details: const ['Newly created group'],
     );
     _groups.insert(0, newGroup);
     _saveGroups();
@@ -660,7 +654,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void addMember(String name, String upiId) {
-    final colors = [0xFF2C6BED, 0xFF22C55E, 0xFFFF6584, 0xFFF59E0B, 0xFF38BDF8, 0xFFA78BFA];
+    const colors = [0xFF2C6BED, 0xFF22C55E, 0xFFFF6584, 0xFFF59E0B, 0xFF38BDF8, 0xFFA78BFA];
     final newMember = Member(
       id: '${_members.length + 1}',
       name: name,
@@ -731,7 +725,7 @@ Widget buildCategoryIcon(String category, {double size = 18, Color? color}) {
     width: 42,
     height: 42,
     decoration: BoxDecoration(
-      color: iconColor.withOpacity(0.15),
+      color: iconColor.withValues(alpha: 0.15),
       borderRadius: BorderRadius.circular(14),
     ),
     child: Center(
@@ -819,7 +813,7 @@ class DashedBorderPainter extends CustomPainter {
   final double gap;
   final double radius;
 
-  DashedBorderPainter({
+  const DashedBorderPainter({
     required this.color,
     this.strokeWidth = 1.5,
     this.gap = 4.0,
@@ -864,6 +858,266 @@ class DashedBorderPainter extends CustomPainter {
 }
 
 // ============================================================================
+// 8B. 3D INTERACTIVE TILT PHYSICS CARD
+// ============================================================================
+class Tilt3DCard extends StatefulWidget {
+  final Widget child;
+  final double maxTilt;
+
+  const Tilt3DCard({
+    super.key,
+    required this.child,
+    this.maxTilt = 0.14,
+  });
+
+  @override
+  State<Tilt3DCard> createState() => _Tilt3DCardState();
+}
+
+class _Tilt3DCardState extends State<Tilt3DCard> with SingleTickerProviderStateMixin {
+  double _rotX = 0.0;
+  double _rotY = 0.0;
+  late AnimationController _animController;
+  late Animation<double> _animX;
+  late Animation<double> _animY;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _resetTilt() {
+    _animX = Tween<double>(begin: _rotX, end: 0.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
+    );
+    _animY = Tween<double>(begin: _rotY, end: 0.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
+    );
+    _animController.forward(from: 0.0).then((_) {
+      if (mounted) {
+        setState(() {
+          _rotX = 0.0;
+          _rotY = 0.0;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        setState(() {
+          _rotX += -details.delta.dy * 0.0035;
+          _rotY += details.delta.dx * 0.0035;
+          _rotX = _rotX.clamp(-widget.maxTilt, widget.maxTilt);
+          _rotY = _rotY.clamp(-widget.maxTilt, widget.maxTilt);
+        });
+      },
+      onPanEnd: (_) => _resetTilt(),
+      onPanCancel: () => _resetTilt(),
+      child: AnimatedBuilder(
+        animation: _animController,
+        builder: (context, child) {
+          final x = _animController.isAnimating ? _animX.value : _rotX;
+          final y = _animController.isAnimating ? _animY.value : _rotY;
+          return Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0012)
+              ..rotateX(x)
+              ..rotateY(y),
+            alignment: FractionalOffset.center,
+            child: widget.child,
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// 8C. DYNAMIC PROCEDURAL UPI QR CODE DIALOG
+// ============================================================================
+class UpiQrPainter extends CustomPainter {
+  final String upiData;
+  final Color color;
+
+  const UpiQrPainter({required this.upiData, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final double cellSize = size.width / 21.0;
+
+    void drawFinderPattern(double x, double y) {
+      canvas.drawRect(Rect.fromLTWH(x, y, cellSize * 7, cellSize * 7), paint);
+      canvas.drawRect(
+        Rect.fromLTWH(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5),
+        Paint()..color = Colors.white,
+      );
+      canvas.drawRect(
+        Rect.fromLTWH(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3),
+        paint,
+      );
+    }
+
+    drawFinderPattern(0, 0);
+    drawFinderPattern(size.width - cellSize * 7, 0);
+    drawFinderPattern(0, size.height - cellSize * 7);
+
+    final int seed = upiData.hashCode;
+    final random = math.Random(seed);
+
+    for (int r = 0; r < 21; r++) {
+      for (int c = 0; c < 21; c++) {
+        if ((r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7)) continue;
+        if (random.nextBool()) {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(c * cellSize + 0.8, r * cellSize + 0.8, cellSize - 1.6, cellSize - 1.6),
+              const Radius.circular(1.5),
+            ),
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+void showUpiQrDialog(
+  BuildContext context, {
+  required String receiverName,
+  required String upiId,
+  required double amount,
+  required VoidCallback onSettled,
+}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+  final textColor = isDark ? Colors.white : AppColors.neutralBlack;
+  final upiPayload = 'upi://pay?pa=$upiId&pn=${Uri.encodeComponent(receiverName)}&am=$amount&cu=INR';
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Scan to Settle via UPI',
+            style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: textColor),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Scan using PhonePe, GPay, Paytm, or BHIM',
+            style: GoogleFonts.inter(fontSize: 12, color: isDark ? AppColors.textMuted : AppColors.neutralGray),
+          ),
+          const SizedBox(height: 20),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: 170,
+              height: 170,
+              child: CustomPaint(
+                painter: UpiQrPainter(
+                  upiData: upiPayload,
+                  color: AppColors.neutralBlack,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Text(
+            Formatters.formatRupee(amount),
+            style: GoogleFonts.plusJakartaSans(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.primary),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'To: $receiverName ($upiId)',
+            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: textColor),
+          ),
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: upiId));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Copied UPI ID: $upiId')),
+                    );
+                  },
+                  icon: const FaIcon(FontAwesomeIcons.copy, size: 12),
+                  label: const Text('Copy UPI'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    onSettled();
+                  },
+                  icon: const FaIcon(FontAwesomeIcons.check, size: 12),
+                  label: const Text('Mark Settled'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    ),
+  );
+}
+
+// ============================================================================
 // 9. CLEAN BOTTOM NAV
 // ============================================================================
 class CleanBottomNav extends StatelessWidget {
@@ -882,7 +1136,7 @@ class CleanBottomNav extends StatelessWidget {
     final navBg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
-    final items = [
+    const items = [
       {'icon': FontAwesomeIcons.house, 'label': 'Home'},
       {'icon': FontAwesomeIcons.users, 'label': 'Groups'},
       {'icon': FontAwesomeIcons.chartSimple, 'label': 'Analytics'},
@@ -896,7 +1150,7 @@ class CleanBottomNav extends StatelessWidget {
         border: Border(top: BorderSide(color: border, width: 1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -922,7 +1176,7 @@ class CleanBottomNav extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
+                          color: isSelected ? AppColors.primary.withValues(alpha: 0.12) : Colors.transparent,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: FaIcon(
@@ -965,7 +1219,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final String _fullText = 'Campus QuickSplit';
+  static const String _fullText = 'Campus QuickSplit';
   String _displayedText = '';
   int _charIndex = 0;
 
@@ -1009,7 +1263,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
+                    color: AppColors.primary.withValues(alpha: 0.4),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -1067,12 +1321,12 @@ class MainShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    final screens = [
-      const DashboardScreen(),
-      const GroupsScreen(),
-      const AnalyticsScreen(),
-      const BillsScreen(),
-      const BalancesScreen(),
+    const screens = [
+      DashboardScreen(),
+      GroupsScreen(),
+      AnalyticsScreen(),
+      BillsScreen(),
+      BalancesScreen(),
     ];
 
     return Scaffold(
@@ -1131,7 +1385,6 @@ class DashboardScreen extends StatelessWidget {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // Parallax SliverAppBar
           SliverAppBar(
             expandedHeight: 180.0,
             floating: false,
@@ -1149,7 +1402,7 @@ class DashboardScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: FaIcon(FontAwesomeIcons.bolt, size: 16, color: AppColors.primary),
                   ),
                 ),
@@ -1168,9 +1421,9 @@ class DashboardScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC4899).withOpacity(0.15),
+                          color: const Color(0xFFEC4899).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: const Color(0xFFEC4899).withOpacity(0.3)),
+                          border: Border.all(color: const Color(0xFFEC4899).withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1254,14 +1507,12 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
 
-          // Main Body
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 3 Stat Cards Row
                   Row(
                     children: [
                       Expanded(
@@ -1315,7 +1566,7 @@ class DashboardScreen extends StatelessWidget {
                             color: isOwed ? AppColors.successGlow : (isOwes ? AppColors.dangerGlow : cardBg),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: isOwed ? AppColors.success.withOpacity(0.3) : (isOwes ? AppColors.danger.withOpacity(0.3) : (isDark ? AppColors.darkBorder : AppColors.lightBorder)),
+                              color: isOwed ? AppColors.success.withValues(alpha: 0.3) : (isOwes ? AppColors.danger.withValues(alpha: 0.3) : (isDark ? AppColors.darkBorder : AppColors.lightBorder)),
                             ),
                           ),
                           child: Column(
@@ -1346,7 +1597,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Quick Action Shortcuts
                   SizedBox(
                     height: 90,
                     child: ListView(
@@ -1374,7 +1624,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Squad Groups Section Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1393,7 +1642,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Horizontal Group Cards
                   SizedBox(
                     height: 115,
                     child: ListView.builder(
@@ -1451,7 +1699,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Recent Activity
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1483,45 +1730,45 @@ class DashboardScreen extends StatelessWidget {
                     )
                   else
                     ListView.separated(
-  shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-  itemCount: math.min(5, provider.expenses.length),
-  separatorBuilder: (_, __) => const SizedBox(height: 8),
-  itemBuilder: (ctx, i) {
-    final exp = provider.expenses[i];
-    return Dismissible(
-      key: Key(exp.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(
-          color: AppColors.danger.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const FaIcon(FontAwesomeIcons.trash, color: AppColors.danger, size: 18),
-      ),
-      onDismissed: (_) {
-        context.read<AppProvider>().deleteExpense(exp.id);
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Deleted "${exp.title}"'),
-            action: SnackBarAction(
-              label: 'UNDO',
-              textColor: AppColors.primary,
-              onPressed: () => context.read<AppProvider>().undoDelete(),
-            ),
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      },
-      child: ExpenseTile(expense: exp),
-    );
-  },
-),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: math.min(5, provider.expenses.length),
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (ctx, i) {
+                        final exp = provider.expenses[i];
+                        return Dismissible(
+                          key: Key(exp.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const FaIcon(FontAwesomeIcons.trash, color: AppColors.danger, size: 18),
+                          ),
+                          onDismissed: (_) {
+                            context.read<AppProvider>().deleteExpense(exp.id);
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Deleted "${exp.title}"'),
+                                action: SnackBarAction(
+                                  label: 'UNDO',
+                                  textColor: AppColors.primary,
+                                  onPressed: () => context.read<AppProvider>().undoDelete(),
+                                ),
+                                duration: const Duration(seconds: 4),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          },
+                          child: ExpenseTile(expense: exp),
+                        );
+                      },
+                    ),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -1532,7 +1779,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-    Widget _buildQuickAction(BuildContext context, dynamic icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildQuickAction(BuildContext context, dynamic icon, String label, Color color, VoidCallback onTap) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
 
@@ -1555,7 +1802,7 @@ class DashboardScreen extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Center(child: FaIcon(icon, size: 13, color: color)),
@@ -1588,7 +1835,7 @@ class GroupsScreen extends StatefulWidget {
 class _GroupsScreenState extends State<GroupsScreen> {
   String _selectedFilter = 'All';
 
-  final List<String> _filters = ['All', 'Home', 'Trip', 'Couple', 'Personal', 'Flat'];
+  static const List<String> _filters = ['All', 'Home', 'Trip', 'Couple', 'Personal', 'Flat'];
 
   void _openCreateGroupDialog(BuildContext context) {
     final nameCtrl = TextEditingController();
@@ -1609,8 +1856,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-  initialValue: category,
-                items: ['Home', 'Trip', 'Couple', 'Personal', 'Flat']
+                initialValue: category,
+                items: const ['Home', 'Trip', 'Couple', 'Personal', 'Flat']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
                 onChanged: (v) {
@@ -1669,13 +1916,13 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(100),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const FaIcon(FontAwesomeIcons.plus, size: 11, color: Colors.white),
-                    const SizedBox(width: 6),
+                    FaIcon(FontAwesomeIcons.plus, size: 11, color: Colors.white),
+                    SizedBox(width: 6),
                     Text(
                       'New Group',
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                   ],
                 ),
@@ -1686,7 +1933,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
       ),
       body: Column(
         children: [
-          // Filter Chips
           SizedBox(
             height: 48,
             child: ListView.builder(
@@ -1721,8 +1967,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // Group List Cards
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1749,7 +1993,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: g.color.withOpacity(0.15),
+                                  color: g.color.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Center(
@@ -1769,7 +2013,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: g.color.withOpacity(0.12),
+                              color: g.color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(100),
                             ),
                             child: Text(
@@ -1783,7 +2027,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSurface.withOpacity(0.5) : AppColors.lightSurface,
+                          color: isDark ? AppColors.darkSurface.withValues(alpha: 0.5) : AppColors.lightSurface,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -1841,7 +2085,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   AnalyticsTimeframe _timeframe = AnalyticsTimeframe.month;
   String _spendType = 'True Spending';
 
-  final List<String> _spendTypes = ['True Spending', 'Cash Out', 'Received', 'Paid'];
+  static const List<String> _spendTypes = ['True Spending', 'Cash Out', 'Received', 'Paid'];
 
   @override
   Widget build(BuildContext context) {
@@ -1864,7 +2108,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     double totalSpend = periodExpenses.fold(0.0, (s, e) => s + e.amount);
 
-    // 7-day bar chart data points
     final List<BarChartGroupData> barGroups = [];
     double maxDaily = 100.0;
 
@@ -1884,7 +2127,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           barRods: [
             BarChartRodData(
               toY: dayTotal,
-              color: (i == 0) ? AppColors.primary : AppColors.accent.withOpacity(0.8),
+              color: (i == 0) ? AppColors.primary : AppColors.accent.withValues(alpha: 0.8),
               width: 14,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
             ),
@@ -1893,7 +2136,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       );
     }
 
-    // Category doughnut breakdown
     final Map<String, double> catMap = {};
     for (final exp in periodExpenses) {
       catMap[exp.category] = (catMap[exp.category] ?? 0.0) + exp.amount;
@@ -1919,7 +2161,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Filter Tabs: True Spending / Cash Out / Received / Paid
             SizedBox(
               height: 38,
               child: ListView.builder(
@@ -1954,7 +2195,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Timeframe Segmented Control
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -1971,7 +2211,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 7-day BarChart Container
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -2024,7 +2263,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Spending by Category (PieChart + legend)
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -2151,7 +2389,6 @@ class _BillsScreenState extends State<BillsScreen> {
       ),
       body: Column(
         children: [
-          // Search Field
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: TextField(
@@ -2167,7 +2404,6 @@ class _BillsScreenState extends State<BillsScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Category Pills
           SizedBox(
             height: 44,
             child: ListView.builder(
@@ -2203,49 +2439,48 @@ class _BillsScreenState extends State<BillsScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Bills List
           Expanded(
             child: filtered.isEmpty
                 ? Center(child: Text('No expenses matched your filter', style: GoogleFonts.inter(fontSize: 13, color: mutedColor)))
                 : ListView.separated(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  itemCount: filtered.length,
-  separatorBuilder: (_, __) => const SizedBox(height: 8),
-  itemBuilder: (ctx, i) {
-    final exp = filtered[i];
-    return Dismissible(
-      key: Key(exp.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(
-          color: AppColors.danger.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const FaIcon(FontAwesomeIcons.trash, color: AppColors.danger, size: 18),
-      ),
-      onDismissed: (_) {
-        context.read<AppProvider>().deleteExpense(exp.id);
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Deleted "${exp.title}"'),
-            action: SnackBarAction(
-              label: 'UNDO',
-              textColor: AppColors.primary,
-              onPressed: () => context.read<AppProvider>().undoDelete(),
-            ),
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      },
-      child: ExpenseTile(expense: exp),
-    );
-  },
-),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (ctx, i) {
+                      final exp = filtered[i];
+                      return Dismissible(
+                        key: Key(exp.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 24),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const FaIcon(FontAwesomeIcons.trash, color: AppColors.danger, size: 18),
+                        ),
+                        onDismissed: (_) {
+                          context.read<AppProvider>().deleteExpense(exp.id);
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Deleted "${exp.title}"'),
+                              action: SnackBarAction(
+                                label: 'UNDO',
+                                textColor: AppColors.primary,
+                                onPressed: () => context.read<AppProvider>().undoDelete(),
+                              ),
+                              duration: const Duration(seconds: 4),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        },
+                        child: ExpenseTile(expense: exp),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -2254,7 +2489,7 @@ class _BillsScreenState extends State<BillsScreen> {
 }
 
 // ============================================================================
-// 16. BALANCES SCREEN
+// 16. BALANCES SCREEN (WITH 3D TILT CARD & GRAPH REDUCTION BANNER)
 // ============================================================================
 class BalancesScreen extends StatefulWidget {
   const BalancesScreen({super.key});
@@ -2264,7 +2499,7 @@ class BalancesScreen extends StatefulWidget {
 }
 
 class _BalancesScreenState extends State<BalancesScreen> {
-  int _subTabIndex = 0; // 0: Balances, 1: Pool Money
+  int _subTabIndex = 0;
 
   void _launchUpi(String upiId, double amount, String name) async {
     final uri = Uri.parse('upi://pay?pa=$upiId&pn=${Uri.encodeComponent(name)}&am=$amount&cu=INR');
@@ -2297,6 +2532,10 @@ class _BalancesScreenState extends State<BalancesScreen> {
     final isOwed = myBalance > 0.009;
     final isOwes = myBalance < -0.009;
 
+    final rawCount = DebtOptimizer.calculateRawUnoptimizedCount(provider.expenses);
+    final optimizedCount = provider.pendingSettlements.length;
+    final reductionPct = rawCount > 0 ? (((rawCount - optimizedCount) / rawCount) * 100).round() : 0;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Balances & Settle', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 20)),
@@ -2307,7 +2546,6 @@ class _BalancesScreenState extends State<BalancesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Segmented Sub-Tabs: Balances vs Pool Money
             Row(
               children: [
                 BouncyButton(
@@ -2318,7 +2556,14 @@ class _BalancesScreenState extends State<BalancesScreen> {
                       color: _subTabIndex == 0 ? AppColors.primary : (isDark ? AppColors.darkSurface : AppColors.pillBg),
                       borderRadius: BorderRadius.circular(100),
                     ),
-                    child: Text('Balances', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: _subTabIndex == 0 ? Colors.white : mutedColor)),
+                    child: Text(
+                      'Balances',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _subTabIndex == 0 ? Colors.white : mutedColor,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -2332,12 +2577,19 @@ class _BalancesScreenState extends State<BalancesScreen> {
                     ),
                     child: Row(
                       children: [
-                        Text('Pool Money', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: _subTabIndex == 1 ? Colors.white : mutedColor)),
+                        Text(
+                          'Pool Money',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _subTabIndex == 1 ? Colors.white : mutedColor,
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                           decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(100)),
-                          child: Text('NEW', style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white)),
+                          child: const Text('NEW', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white)),
                         ),
                       ],
                     ),
@@ -2348,7 +2600,6 @@ class _BalancesScreenState extends State<BalancesScreen> {
             const SizedBox(height: 16),
 
             if (_subTabIndex == 1) ...[
-              // Pool Money Illustration / Vault
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(28),
@@ -2363,7 +2614,7 @@ class _BalancesScreenState extends State<BalancesScreen> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.12),
+                        color: AppColors.primary.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -2391,38 +2642,137 @@ class _BalancesScreenState extends State<BalancesScreen> {
                 ),
               ),
             ] else ...[
-              // Net Balance Big Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              Tilt3DCard(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isOwed ? AppColors.success : (isOwes ? AppColors.danger : AppColors.primary)).withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'OVERALL SQUAD BALANCE',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: mutedColor,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: const Row(
+                              children: [
+                                FaIcon(FontAwesomeIcons.handPointer, size: 9, color: AppColors.primary),
+                                SizedBox(width: 4),
+                                Text(
+                                  '3D Tilt',
+                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      AnimatedRupeeCounter(
+                        value: myBalance.abs(),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: isOwed ? AppColors.success : (isOwes ? AppColors.danger : textColor),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        isOwed
+                            ? 'Squad friends owe you in total'
+                            : (isOwes ? 'You owe friends in total' : 'All accounts are completely even!'),
+                        style: GoogleFonts.inter(fontSize: 12, color: mutedColor),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: Row(
                   children: [
-                    Text('OVERALL SQUAD BALANCE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: mutedColor, letterSpacing: 0.8)),
-                    const SizedBox(height: 6),
-                    AnimatedRupeeCounter(
-                      value: myBalance.abs(),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: isOwed ? AppColors.success : (isOwes ? AppColors.danger : textColor),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: FaIcon(FontAwesomeIcons.diagramProject, size: 14, color: AppColors.primary),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      isOwed ? 'Squad friends owe you in total' : (isOwes ? 'You owe friends in total' : 'All accounts are completely even!'),
-                      style: GoogleFonts.inter(fontSize: 12, color: mutedColor),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Graph Optimization',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
+                              ),
+                              if (reductionPct > 0) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Text(
+                                    '-$reductionPct% transfers',
+                                    style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          Text(
+                            '$rawCount raw directed debts → $optimizedCount greedy tree transfers',
+                            style: GoogleFonts.inter(fontSize: 11, color: mutedColor),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Optimized Settlements
               Text(
                 'Optimal Settle Up (${provider.pendingSettlements.length} transfers)',
                 style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700, color: textColor),
@@ -2489,8 +2839,16 @@ class _BalancesScreenState extends State<BalancesScreen> {
                         const SizedBox(width: 10),
                         BouncyButton(
                           onTap: () {
-                            _launchUpi(toUpi, debt.amount, toName);
-                            provider.settleDebt(debt.fromMemberId, debt.toMemberId, debt.amount);
+                            showUpiQrDialog(
+                              context,
+                              receiverName: toName,
+                              upiId: toUpi,
+                              amount: debt.amount,
+                              onSettled: () {
+                                _launchUpi(toUpi, debt.amount, toName);
+                                provider.settleDebt(debt.fromMemberId, debt.toMemberId, debt.amount);
+                              },
+                            );
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -2498,9 +2856,15 @@ class _BalancesScreenState extends State<BalancesScreen> {
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(100),
                             ),
-                            child: Text(
-                              'Settle',
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                            child: const Row(
+                              children: [
+                                FaIcon(FontAwesomeIcons.qrcode, size: 11, color: Colors.white),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Settle',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -2561,7 +2925,7 @@ class _SettingsSheetState extends State<SettingsSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: mutedColor.withOpacity(0.3),
+                color: mutedColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2570,21 +2934,19 @@ class _SettingsSheetState extends State<SettingsSheet> {
           Text('Settings & Squad', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: textColor)),
           const SizedBox(height: 16),
 
-          // Theme toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Dark Mode', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: textColor)),
               Switch(
                 value: provider.themeMode == ThemeMode.dark,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 onChanged: (_) => provider.toggleTheme(),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // Add squad mate
           Text('ADD SQUAD MEMBER', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: mutedColor, letterSpacing: 0.8)),
           const SizedBox(height: 8),
           Row(
@@ -2620,7 +2982,6 @@ class _SettingsSheetState extends State<SettingsSheet> {
           ),
           const SizedBox(height: 20),
 
-          // Reset database
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -2666,14 +3027,14 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   final Map<String, TextEditingController> _exactCtrls = {};
   final Map<String, TextEditingController> _percentCtrls = {};
 
-  final List<Map<String, dynamic>> _payBrands = [
-    {'name': 'PhonePe', 'color': const Color(0xFF5F259F), 'letter': 'P'},
-    {'name': 'GPay', 'color': const Color(0xFF4285F4), 'letter': 'G'},
-    {'name': 'Paytm', 'color': const Color(0xFF00BAF2), 'letter': 'P'},
-    {'name': 'Zomato', 'color': const Color(0xFFE23744), 'letter': 'Z'},
-    {'name': 'Swiggy', 'color': const Color(0xFFFC8019), 'letter': 'S'},
-    {'name': 'Zepto', 'color': const Color(0xFF7B2CBF), 'letter': 'Z'},
-    {'name': 'Blinkit', 'color': const Color(0xFFF8CB46), 'letter': 'B'},
+  static const List<Map<String, dynamic>> _payBrands = [
+    {'name': 'PhonePe', 'color': Color(0xFF5F259F), 'letter': 'P'},
+    {'name': 'GPay', 'color': Color(0xFF4285F4), 'letter': 'G'},
+    {'name': 'Paytm', 'color': Color(0xFF00BAF2), 'letter': 'P'},
+    {'name': 'Zomato', 'color': Color(0xFFE23744), 'letter': 'Z'},
+    {'name': 'Swiggy', 'color': Color(0xFFFC8019), 'letter': 'S'},
+    {'name': 'Zepto', 'color': Color(0xFF7B2CBF), 'letter': 'Z'},
+    {'name': 'Blinkit', 'color': Color(0xFFF8CB46), 'letter': 'B'},
   ];
 
   @override
@@ -2726,7 +3087,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final textColor = isDark ? Colors.white : AppColors.neutralBlack;
     final mutedColor = isDark ? AppColors.textMuted : AppColors.neutralGray;
-    final splitLabels = ['Equally', 'Unequally', 'By %'];
+    const splitLabels = ['Equally', 'Unequally', 'By %'];
 
     return Container(
       decoration: BoxDecoration(
@@ -2749,29 +3110,29 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: mutedColor.withOpacity(0.3),
+                  color: mutedColor.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
-            // Top Row: Avatar Overlap Stack + Bill Tabs
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    CustomPaint(
+                    const CustomPaint(
                       painter: DashedBorderPainter(
                         color: AppColors.primary,
                         radius: 12,
                       ),
-                      child: Container(
+                      child: SizedBox(
                         width: 38,
                         height: 38,
-                        alignment: Alignment.center,
-                        child: const FaIcon(FontAwesomeIcons.plus, size: 12, color: AppColors.primary),
+                        child: Center(
+                          child: FaIcon(FontAwesomeIcons.plus, size: 12, color: AppColors.primary),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -2833,7 +3194,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(100),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
                       child: Text(
                         '+ Add bill',
@@ -2850,7 +3211,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 20),
 
-            // Total Amount Big Input
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -2882,7 +3242,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                         hintStyle: GoogleFonts.plusJakartaSans(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
-                          color: mutedColor.withOpacity(0.4),
+                          color: mutedColor.withValues(alpha: 0.4),
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -2897,7 +3257,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Pay via Brands Row
             SizedBox(
               height: 48,
               child: ListView.builder(
@@ -2918,7 +3277,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                         border: isSelected ? Border.all(color: Colors.white, width: 2.5) : null,
                         boxShadow: [
                           BoxShadow(
-                            color: (brand['color'] as Color).withOpacity(0.4),
+                            color: (brand['color'] as Color).withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -3019,7 +3378,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                     Text('Multiple Payers', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
                     Switch(
                       value: _isMultiPayer,
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       onChanged: (val) => setState(() => _isMultiPayer = val),
                     ),
                   ],
@@ -3080,7 +3439,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
               ),
             const SizedBox(height: 20),
 
-            // ── Split Mode Pills ──
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -3133,7 +3491,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 4),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary.withOpacity(0.06) : Colors.transparent,
+                    color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -3196,7 +3554,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 20),
 
-            // ── MISSING 3d: Bottom Row of 3 Pill Action Buttons ──
             Row(
               children: [
                 Expanded(
@@ -3268,7 +3625,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Submit Button ──
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -3450,7 +3806,7 @@ class ExpenseTile extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: mutedColor.withOpacity(0.3),
+                  color: mutedColor.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -3498,7 +3854,7 @@ class ExpenseTile extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.06),
+                  color: AppColors.primary.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
@@ -3578,7 +3934,7 @@ class ExpenseTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -3630,7 +3986,7 @@ class ExpenseTile extends StatelessWidget {
 }
 
 // ============================================================================
-// 7I. MISSING 7: PERSONAL EXPENSES SCREEN
+// 7I. PERSONAL EXPENSES SCREEN
 // ============================================================================
 class PersonalExpensesScreen extends StatelessWidget {
   const PersonalExpensesScreen({super.key});
@@ -3643,11 +3999,11 @@ class PersonalExpensesScreen extends StatelessWidget {
     final mutedColor = isDark ? AppColors.textMuted : AppColors.neutralGray;
     final scaffoldBg = isDark ? AppColors.darkBg : AppColors.lightBg;
 
-    final personalItems = [
-      {'name': 'Extra', 'amount': 4900.0, 'color': const Color(0xFF8B5CF6), 'highlight': false},
-      {'name': 'Shopping', 'amount': 2245.0, 'color': const Color(0xFFFF8C42), 'highlight': false},
+    const personalItems = [
+      {'name': 'Extra', 'amount': 4900.0, 'color': Color(0xFF8B5CF6), 'highlight': false},
+      {'name': 'Shopping', 'amount': 2245.0, 'color': Color(0xFFFF8C42), 'highlight': false},
       {'name': 'Groceries', 'amount': 2000.0, 'color': AppColors.success, 'highlight': true},
-      {'name': 'Food', 'amount': 340.0, 'color': const Color(0xFFEF4444), 'highlight': false},
+      {'name': 'Food', 'amount': 340.0, 'color': Color(0xFFEF4444), 'highlight': false},
     ];
 
     return Scaffold(
@@ -3700,12 +4056,11 @@ class PersonalExpensesScreen extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // Pink-tinted circle icon
             Container(
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFFEC4899).withOpacity(0.12),
+                color: const Color(0xFFEC4899).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -3714,7 +4069,6 @@ class PersonalExpensesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Heading with purple "Primary" pill badge
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -3731,7 +4085,7 @@ class PersonalExpensesScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -3747,7 +4101,6 @@ class PersonalExpensesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // 3 Action Buttons: Export / Recurring / Settings
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -3760,7 +4113,6 @@ class PersonalExpensesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Segmented Pill Tabs: Expense / Summary (active)
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -3808,7 +4160,6 @@ class PersonalExpensesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Sub-tabs row: Category Wise / Total Spending
             Row(
               children: [
                 Container(
@@ -3838,14 +4189,13 @@ class PersonalExpensesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Category-wise Summary Card with Doughnut Chart
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 4)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 4)),
                 ],
               ),
               child: Column(
@@ -3876,7 +4226,6 @@ class PersonalExpensesScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Doughnut chart with center percentage
                   SizedBox(
                     height: 180,
                     child: Stack(
@@ -3917,7 +4266,6 @@ class PersonalExpensesScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Breakdown list items
                   ...personalItems.map((item) {
                     final isHighlighted = item['highlight'] as bool;
                     return Container(
@@ -3925,10 +4273,10 @@ class PersonalExpensesScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: isHighlighted
-                            ? AppColors.success.withOpacity(isDark ? 0.15 : 0.08)
+                            ? AppColors.success.withValues(alpha: isDark ? 0.15 : 0.08)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
-                        border: isHighlighted ? Border.all(color: AppColors.success.withOpacity(0.3)) : null,
+                        border: isHighlighted ? Border.all(color: AppColors.success.withValues(alpha: 0.3)) : null,
                       ),
                       child: Row(
                         children: [
@@ -3976,7 +4324,7 @@ class PersonalExpensesScreen extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: color.withOpacity(isDark ? 0.2 : 0.12),
+            color: color.withValues(alpha: isDark ? 0.2 : 0.12),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
@@ -3998,7 +4346,7 @@ class PersonalExpensesScreen extends StatelessWidget {
 }
 
 // ============================================================================
-// 8. ENTRYPOINT
+// 19. ENTRYPOINT
 // ============================================================================
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
