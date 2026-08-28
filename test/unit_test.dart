@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:campus_quicksplit/main.dart';
+import 'package:flutter/material.dart';
 
 void main() {
   group('Comprehensive Unit & Math Tests', () {
@@ -70,44 +71,45 @@ void main() {
 
     test('4. Settlement records adjust balances without inflating spend totals', () {
       final members = [
-        Member(id: '1', name: 'Aarav', avatarColor: '#6C63FF'),
-        Member(id: '2', name: 'Rohan', avatarColor: '#00C896'),
-      ];
+  Member(id: '1', name: 'Aarav', avatarColor: const Color(0xFF6C63FF)),
+  Member(id: '2', name: 'Rohan', avatarColor: const Color(0xFF00C896)),
+];
 
-      final expense = Expense(
-        id: 'exp1',
-        title: 'Juice',
-        amount: 200.0,
-        category: 'Canteen',
-        date: DateTime.now(),
-        paidBy: {'1': 200.0},
-        splitMode: SplitMode.equal,
-        splits: {'1': 100.0, '2': 100.0},
-      );
+final expense = Expense(
+  id: 'exp1',
+  title: 'Juice',
+  amount: 200.0,
+  category: 'Canteen',
+  date: DateTime.now(),
+  paidBy: {'1': 200.0},
+  splitMode: SplitMode.equal,
+  splits: {'1': 100.0, '2': 100.0},
+);
 
-      final settlement = SettlementRecord(
-        id: 'set1',
-        fromMemberId: '2',
-        toMemberId: '1',
-        amount: 100.0,
-        date: DateTime.now(),
-      );
+final settlement = SettlementRecord(
+  id: 'set1',
+  fromMemberId: '2',
+  toMemberId: '1',
+  amount: 100.0,
+  date: DateTime.now(),
+);
 
-      final balances = DebtOptimizer.computeNetBalances(
-        members: members,
-        expenses: [expense],
-        settlements: [settlement],
-      );
+// Pass the singular variables inside lists:
+final balances = DebtOptimizer.computeNetBalances(
+  members,
+  [expense],
+  [settlement],
+);
 
-      expect(balances['1']!.abs() < 0.01, true);
-      expect(balances['2']!.abs() < 0.01, true);
+expect(balances['1']!.abs() < 0.01, true);
+expect(balances['2']!.abs() < 0.01, true);
 
-      final pendingDebts = DebtOptimizer.computeSimplifiedDebts(
-        members: members,
-        expenses: [expense],
-        settlements: [settlement],
-      );
-      expect(pendingDebts.isEmpty, true);
+final pendingDebts = DebtOptimizer.computeSimplifiedDebts(
+  members,
+  [expense],
+  [settlement],
+);
+expect(pendingDebts.isEmpty, true);
     });
 
     test('5. Timestamp formatting displays exact time and relative tag', () {
@@ -120,7 +122,7 @@ void main() {
     });
 
     test('6. Negative/NaN rejection helpers are finite-safe', () {
-      final bad = double.nan;
+      const bad = double.nan;
       expect(bad.isFinite, false);
       expect(double.infinity.isFinite, false);
       expect((-5.0) > 0, false);
